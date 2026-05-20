@@ -1,12 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { StyleSheet, Text,View,TouchableOpacity,TextInput} from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput,ScrollView } from 'react-native';
 
-export default function compraAuto() {
+export default function CompraAuto() {
   const[costo,setCosto]= useState('');
   const [salario, setSalario] =useState('')
   const[transmision, setTransmision]= useState('manual');
   const [formaPago, setFormaPago] = useState('contado');
+  const[mostrarResultado,setResultado]= useState(false);
 
   //Calculos de manual y automatico
 function calcularAuto(costoOriginal,transmision){
@@ -27,9 +28,6 @@ const granTotal = precioBase + impuesto;
 
 return{precioBase,impuesto,granTotal};
 }
-const costoOriginal = parseFloat(costo) || 0;
-const { precioBase, impuesto, granTotal } = calcularAuto(costoOriginal, transmision);
-const formato = (n) => `$${n.toFixed(2)}`;
 
 function calcularCredito(precioBase, formaPago, salario){
   let capitalFinal = precioBase;
@@ -43,144 +41,383 @@ function calcularCredito(precioBase, formaPago, salario){
   const letraMensual = capitalFinal / (9*12);
   const aprobado = letraMensual <= salario*0.3 ? 'APROBADO' : 'NO APROBADO';
   
-
-  
   return {capitalFinal, letraMensual, aprobado};
 }
-
+const costoOriginal = parseFloat(costo) || 0;
+const { precioBase, impuesto, granTotal } = calcularAuto(costoOriginal, transmision);
+const formato = (n) => `$${n.toFixed(2)}`;
 const {capitalFinal, letraMensual, aprobado} = calcularCredito(precioBase, formaPago, parseFloat(salario) || 0);
 
   return (
-    <View style={styles.container}>
-     <Text style={styles.titulo}>Venta de Autos</Text>
-     <Text style={styles.label}>Costo:</Text>
+    <ScrollView style={styles.contenedor} contentContainerStyle={{ paddingBottom: 40 }}>
 
-     {/*input de costos*/}
-     <TextInput style={styles.input}
-     placeholder='Ingrese el costo. ej:15000'
-     keyboardType='numeric'
-     value={costo}
-     onChangeText={setCosto}
-     ></TextInput>
-
-     {/*input de salarios*/}
-     <TextInput style={styles.input}
-     placeholder='Ingrese el salario'
-     keyboardType='numeric'
-     value={salario}
-     onChangeText={setSalario}
-     ></TextInput>
-
-    {/*Radio Button Manual*/}
-     <Text style={styles.label}>Transmisión</Text>
-     <TouchableOpacity style={styles.radioOption} onPress={()=> setTransmision('manual')}>
-      <View style={styles.radioCircle}>
-      {transmision === 'manual' && <View style={styles.radioDot} />}
+      {/* ── ENCABEZADO ── */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitulo}>Venta de Autos</Text>
       </View>
-      <Text>Manual</Text>
-     </TouchableOpacity>
 
-    {/*Radio Button automatico*/}
-     <TouchableOpacity style={styles.radioOption} onPress={() => setTransmision('automatica')}>
-     <View style={styles.radioCircle}>
-     {transmision === 'automatica' && <View style={styles.radioDot} />}
-     </View>
-     <Text>Automática</Text>
-    </TouchableOpacity>
+      {/* ── FORMULARIO ── */}
+      <View style={styles.formBody}>
 
-    {/*Forma de Pago*/}
-    <Text>Forma de Pago</Text>
-    <TouchableOpacity onPress={() => setFormaPago('credito')} style={styles.radioOption}>
-      <View style={styles.radioCircle}>
-        {formaPago === 'credito' && <View style={styles.radioDot} />}
+        {/* Input: costo del vehículo */}
+        <Text style={styles.label}>Costo del vehículo</Text>
+        <View style={styles.inputWrap}>
+          <Text style={styles.inputPrefix}>$</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="ej. 15000"
+            keyboardType="numeric"
+            value={costo}
+            onChangeText={setCosto}
+          />
+        </View>
+
+        {/* Input: salario mensual */}
+        <Text style={styles.label}>Salario mensual</Text>
+        <View style={styles.inputWrap}>
+          <Text style={styles.inputPrefix}>$</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="ej. 1000"
+            keyboardType="numeric"
+            value={salario}
+            onChangeText={setSalario}
+          />
+        </View>
+
+        {/* Radio: tipo de transmisión */}
+        <Text style={styles.sectionLabel}>Transmisión</Text>
+        <View style={styles.radioGroup}>
+          {['manual', 'automatica'].map((op) => (
+            <TouchableOpacity
+              key={op}
+              style={[styles.radioBtn, transmision === op && styles.radioBtnActivo]}
+              onPress={() => setTransmision(op)}
+            >
+              <View style={styles.radioCircle}>
+                {transmision === op && <View style={styles.radioDot} />}
+              </View>
+              <Text style={styles.radioText}>
+                {op === 'manual' ? 'Manual' : 'Automática'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Radio: forma de pago */}
+        <Text style={styles.sectionLabel}>Forma de pago</Text>
+        <View style={styles.radioGroup}>
+          {['contado', 'credito'].map((op) => (
+            <TouchableOpacity
+              key={op}
+              style={[styles.radioBtn, formaPago === op && styles.radioBtnActivo]}
+              onPress={() => setFormaPago(op)}
+            >
+              <View style={styles.radioCircle}>
+                {formaPago === op && <View style={styles.radioDot} />}
+              </View>
+              <Text style={styles.radioText}>
+                {op === 'contado' ? 'Contado' : 'Crédito'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Botón calcular */}
+        <TouchableOpacity style={styles.calcBtn} onPress={() => setResultado(true)}>
+          <Text style={styles.calcBtnTexto}>CALCULAR</Text>
+        </TouchableOpacity>
       </View>
-      <Text>Crédito</Text>
-    </TouchableOpacity>
 
+      {/* ── RESULTADOS — solo se muestra al presionar calcular ── */}
+      {mostrarResultado && costoOriginal > 0 && (
+        <View style={styles.resultSection}>
 
-    <TouchableOpacity onPress={() => setFormaPago('contado')} style={styles.radioOption}>
-      <View style={styles.radioCircle}>
-        {formaPago === 'contado' && <View style={styles.radioDot} />}
-      </View>
-      <Text>Contado</Text>
-    </TouchableOpacity>
+          {/* Badge verde = aprobado / rojo = no aprobado */}
+          <View style={[styles.statusBadge, aprobado === 'APROBADO' ? styles.badgeOk : styles.badgeMal]}>
+            <Text style={[styles.statusTexto, aprobado === 'APROBADO' ? styles.statusTextoOk : styles.statusTextoMal]}>
+              {aprobado}
+            </Text>
+          </View>
 
-    
-    <Text>30% del salario: {formato(salario * 0.3)}</Text>
-    <Text>Letra mensual: {formato(letraMensual)}</Text>
-    <Text>Estado crédito: {aprobado}</Text>
+          {/* Una sola tarjeta con todos los montos */}
+          <View style={styles.tarjeta}>
 
+            {/* Fila: costo base */}
+            <View style={styles.fila}>
+              <Text style={styles.filaLabel}>Costo (base + transmisión)</Text>
+              <Text style={styles.filaValor}>{formato(precioBase)}</Text>
+            </View>
 
-     {costoOriginal > 0 && (
-     <View style={styles.resultado}>
-     <Text>Costo:      {formato(precioBase)}</Text>
-     <Text>Impuesto:   {formato(impuesto)}</Text>
-     <Text>Gran total: {formato(granTotal)}</Text>
-    </View>
+            {/* Fila: impuesto */}
+            <View style={styles.fila}>
+              <Text style={styles.filaLabel}>Impuesto (7% ITBM)</Text>
+              <Text style={styles.filaValor}>{formato(impuesto)}</Text>
+            </View>
+
+            {/* Fila: gran total — más grande y destacado */}
+            <View style={[styles.fila, styles.filaTotal]}>
+              <Text style={styles.filaLabelTotal}>Gran Total</Text>
+              <Text style={styles.filaValorTotal}>{formato(granTotal)}</Text>
+            </View>
+
+            {/* Línea separadora entre costos y crédito */}
+            <View style={styles.separador} />
+
+            {/* Fila: capacidad de pago */}
+            <View style={styles.fila}>
+              <Text style={styles.filaLabel}>Capacidad</Text>
+              <Text style={styles.filaValor}>{formato((parseFloat(salario) || 0) * 0.3)}</Text>
+            </View>
+
+            {/* Fila: letra mensual */}
+            <View style={styles.fila}>
+              <View>
+                <Text style={styles.letraLabel}>Letra mensual</Text>
+              </View>
+              <Text style={styles.letraValor}>{formato(letraMensual)}</Text>
+            </View>
+
+          </View>
+        </View>
       )}
-    </View>
-    
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex:1,
-    padding:24,
-    backgroundColor:'#fff'
+
+  // Fondo general de la pantalla
+  contenedor: {
+    flex: 1,
+    backgroundColor: '#f4f9fb',
   },
 
-  titulo:{
-    fontSize:22,
-    fontWeight:'600',
-    marginTop:'20',
-    textAlign:'center'
+  header: {
+    backgroundColor: '#1d6a7a',     
+    paddingTop: 60,
+    paddingBottom: 28,
+    alignItems: 'center',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerTitulo: {
+    color: '#ffffff',
+    fontSize: 22,
+    fontWeight: '600',
+  },
+  headerSub: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13,
+    marginTop: 2,
   },
 
-  label:{
-    fontSize:14,
-    color: '#555', 
-    marginTop: 14, 
+  formBody: {
+    padding: 20,
+  },
+
+  label: {
+    fontSize: 13,
+    color: '#5a7f8a',  
+    fontWeight: '500',
     marginBottom: 6,
+    marginTop: 14,
   },
 
-  input:{
-    borderWidth: 1, 
-    borderColor: '#ddd', 
-    borderRadius: 8, 
-    padding: 10, 
-    fontSize: 16 
+  // Contenedor del input con prefijo $
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#c8dfe5',           // borde azul claro
+    borderRadius: 8,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 12,
+  },
+  inputPrefix: {
+    fontSize: 15,
+    color: '#212f31',                 // azul petróleo
+    fontWeight: '500',
+    marginRight: 6,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#1a3a42',                 // texto oscuro
   },
 
-  radioOption:{
-    flexDirection:'row',
-    alignItems: 'center', 
-    gap: 10, 
-    marginBottom: 8
+  // Etiqueta de sección (Transmisión, Forma de pago)
+  sectionLabel: {
+    fontSize: 13,
+    color: '#5a7f8a',
+    fontWeight: '500',
+    marginTop: 16,
+    marginBottom: 8,
   },
 
-  radioCircle:{
-    width: 20, 
-    height: 20, 
-    borderRadius: 10, 
-    borderWidth: 2, 
-    borderColor: '#333', 
-    alignItems: 'center', 
-    justifyContent: 'center'
+  // Fila de botones radio
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 10,
   },
 
-  radioDot:{
-    width: 10, 
-    height: 10, 
-    borderRadius: 5, 
-    backgroundColor: '#333'
+  // Botón radio sin seleccionar
+  radioBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    borderWidth: 1.5,
+    borderColor: '#c8dfe5',           
+    borderRadius: 8,
+    backgroundColor: '#ffffff',
   },
 
-  resultado:{
-    marginTop: 24, 
-    backgroundColor: '#f5f5f5', 
-    borderRadius: 12, 
-    padding: 16, 
-    gap: 8 
+  // Botón radio cuando está seleccionado
+  radioBtnActivo: {
+    borderColor: '#1d6a7a',           
+    backgroundColor: '#e1f5f0',      
+  },
+
+  // Círculo exterior del radio
+  radioCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#c8dfe5',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // Punto interior del radio cuando está activo
+  radioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#1d6a7a',      
+  },
+
+  radioText: {
+    fontSize: 14,
+    color: '#1a3a42',
+  },
+
+  // Botón principal CALCULAR
+  calcBtn: {
+    marginTop: 20,
+    backgroundColor: '#1d6a7a',      
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  calcBtnTexto: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '500',
+    letterSpacing: 0.5,
+  },
+
+  resultSection: {
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+
+  // Badge APROBADO / NO APROBADO
+  statusBadge: {
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 12,
+    borderWidth: 1.5,
+  },
+  badgeOk: {
+    backgroundColor: '#eaf3de',      // verde muy claro
+    borderColor: '#97c459',          // verde medio
+  },
+  badgeMal: {
+    backgroundColor: '#fcebeb',      // rojo muy claro
+    borderColor: '#f09595',          // rojo medio
+  },
+  statusTexto: {
+    fontSize: 18,
+    fontWeight: '500',
+  },
+  statusTextoOk: {
+    color: '#3b6d11',                // verde oscuro
+  },
+  statusTextoMal: {
+    color: '#a32d2d',                // rojo oscuro
+  },
+
+  // Tarjeta única que agrupa todos los montos
+  tarjeta: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#c8dfe5',          // borde azul claro
+    padding: 16,
+  },
+
+  // Fila genérica label + valor
+  fila: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderBottomColor: '#c8dfe5',
+  },
+  filaLabel: {
+    fontSize: 13,
+    color: '#5a7f8a',                // gris azulado
+    flex: 1,
+  },
+  filaValor: {
+    fontSize: 14,
+    color: '#1a3a42',
+    fontWeight: '500',
+  },
+
+  // Fila Gran Total — sin borde inferior, texto más grande
+  filaTotal: {
+    borderBottomWidth: 0,
+    paddingTop: 12,
+  },
+  filaLabelTotal: {
+    fontSize: 15,
+    color: '#1a3a42',
+    fontWeight: '500',
+  },
+  filaValorTotal: {
+    fontSize: 20,
+    color: '#1d6a7a',               // azul petróleo destacado
+    fontWeight: '500',
+  },
+
+  // Línea que separa costos de crédito dentro de la tarjeta
+  separador: {
+    height: 0.5,
+    backgroundColor: '#c8dfe5',
+    marginVertical: 10,
+  },
+
+  // Fila de letra mensual con subtítulo
+  letraLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1d6a7a',
+  },
+  letraSub: {
+    fontSize: 11,
+    color: '#5a7f8a',
+    marginTop: 2,
+  },
+  letraValor: {
+    fontSize: 22,
+    fontWeight: '500',
+    color: '#1d6a7a',               // azul petróleo
   },
 });
