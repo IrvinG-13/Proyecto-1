@@ -45,7 +45,13 @@ function calcularCredito(precioBase, formaPago, salario){
 }
 const costoOriginal = parseFloat(costo) || 0;
 const { precioBase, impuesto, granTotal } = calcularAuto(costoOriginal, transmision);
-const formato = (n) => `$${n.toFixed(2)}`;
+
+const formato = (n) =>
+  `$${Number(n || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+  
 const credito = formaPago === 'credito'
   ? calcularCredito(precioBase, formaPago, parseFloat(salario) || 0)
   : { capitalFinal: 0, letraMensual: 0, aprobado: '' };
