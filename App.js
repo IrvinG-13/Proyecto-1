@@ -46,7 +46,11 @@ function calcularCredito(precioBase, formaPago, salario){
 const costoOriginal = parseFloat(costo) || 0;
 const { precioBase, impuesto, granTotal } = calcularAuto(costoOriginal, transmision);
 const formato = (n) => `$${n.toFixed(2)}`;
-const {capitalFinal, letraMensual, aprobado} = calcularCredito(precioBase, formaPago, parseFloat(salario) || 0);
+const credito = formaPago === 'credito'
+  ? calcularCredito(precioBase, formaPago, parseFloat(salario) || 0)
+  : { capitalFinal: 0, letraMensual: 0, aprobado: '' };
+
+const { capitalFinal, letraMensual, aprobado } = credito;
 
   return (
     <ScrollView style={styles.contenedor} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -72,18 +76,23 @@ const {capitalFinal, letraMensual, aprobado} = calcularCredito(precioBase, forma
           />
         </View>
 
+        
         {/* Input: salario mensual */}
-        <Text style={styles.label}>Salario mensual</Text>
-        <View style={styles.inputWrap}>
-          <Text style={styles.inputPrefix}>$</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="ej. 1000"
-            keyboardType="numeric"
-            value={salario}
-            onChangeText={setSalario}
-          />
-        </View>
+        {formaPago === 'credito' && (
+          <>
+            <Text style={styles.label}>Salario mensual</Text>
+            <View style={styles.inputWrap}>
+              <Text style={styles.inputPrefix}>$</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="ej. 1000"
+                keyboardType="numeric"
+                value={salario}
+                onChangeText={setSalario}
+              />
+            </View>
+          </>
+        )}
 
         {/* Radio: tipo de transmisión */}
         <Text style={styles.sectionLabel}>Transmisión</Text>
@@ -111,8 +120,15 @@ const {capitalFinal, letraMensual, aprobado} = calcularCredito(precioBase, forma
             <TouchableOpacity
               key={op}
               style={[styles.radioBtn, formaPago === op && styles.radioBtnActivo]}
-              onPress={() => setFormaPago(op)}
-            >
+              onPress={() => {
+                setFormaPago(op);
+                setResultado(false);
+
+                if (op === 'contado') {
+                  setSalario('');
+                }
+              }}
+              >
               <View style={styles.radioCircle}>
                 {formaPago === op && <View style={styles.radioDot} />}
               </View>
@@ -134,11 +150,13 @@ const {capitalFinal, letraMensual, aprobado} = calcularCredito(precioBase, forma
         <View style={styles.resultSection}>
 
           {/* Badge verde = aprobado / rojo = no aprobado */}
-          <View style={[styles.statusBadge, aprobado === 'APROBADO' ? styles.badgeOk : styles.badgeMal]}>
-            <Text style={[styles.statusTexto, aprobado === 'APROBADO' ? styles.statusTextoOk : styles.statusTextoMal]}>
-              {aprobado}
-            </Text>
-          </View>
+          {formaPago === 'credito' && (
+            <View style={[styles.statusBadge, aprobado === 'APROBADO' ? styles.badgeOk : styles.badgeMal]}>
+              <Text style={[styles.statusTexto, aprobado === 'APROBADO' ? styles.statusTextoOk : styles.statusTextoMal]}>
+                {aprobado}
+              </Text>
+            </View>
+          )}
 
           {/* Una sola tarjeta con todos los montos */}
           <View style={styles.tarjeta}>
@@ -162,21 +180,31 @@ const {capitalFinal, letraMensual, aprobado} = calcularCredito(precioBase, forma
             </View>
 
             {/* Línea separadora entre costos y crédito */}
-            <View style={styles.separador} />
+            {formaPago === 'credito' && (
+              <>
+                <View style={styles.separador} />
 
-            {/* Fila: capacidad de pago */}
-            <View style={styles.fila}>
-              <Text style={styles.filaLabel}>Capacidad</Text>
-              <Text style={styles.filaValor}>{formato((parseFloat(salario) || 0) * 0.3)}</Text>
-            </View>
+                {/* Fila: capital final */}
+                <View style={styles.fila}>
+                  <Text style={styles.filaLabel}>Capital final</Text>
+                  <Text style={styles.filaValor}>{formato(capitalFinal)}</Text>
+                </View>
 
-            {/* Fila: letra mensual */}
-            <View style={styles.fila}>
-              <View>
-                <Text style={styles.letraLabel}>Letra mensual</Text>
-              </View>
-              <Text style={styles.letraValor}>{formato(letraMensual)}</Text>
-            </View>
+                {/* Fila: capacidad de pago */}
+                <View style={styles.fila}>
+                  <Text style={styles.filaLabel}>30% del salario</Text>
+                  <Text style={styles.filaValor}>{formato((parseFloat(salario) || 0) * 0.3)}</Text>
+                </View>
+
+                {/* Fila: letra mensual */}
+                <View style={styles.fila}>
+                  <View>
+                    <Text style={styles.letraLabel}>Letra mensual</Text>
+                  </View>
+                  <Text style={styles.letraValor}>{formato(letraMensual)}</Text>
+                </View>
+              </>
+            )}
 
           </View>
         </View>
